@@ -509,35 +509,13 @@ msg_parsed(struct context *ctx, struct conn *conn, struct msg *msg)
     struct mbuf *mbuf, *nbuf;
 
     mbuf = STAILQ_LAST(&msg->mhdr, mbuf, next);
-	nbuf = STAILQ_FIRST(&msg->mhdr);
 
-    loga("msg->pos %"PRIu64", mbuf->last %"PRIu64" ========= ", msg->pos, mbuf->last);
-    if (nbuf == mbuf) {
-      if (msg->pos == mbuf->last) {
-        /* no more data to parse */
-        conn->recv_done(ctx, conn, msg, NULL);
-        return DN_OK;
-      }
-    }
+    if (msg->pos == mbuf->last) {
+       /* no more data to parse */
+       conn->recv_done(ctx, conn, msg, NULL);
+       return DN_OK;
+     }
 
-    /*
-	nbuf = STAILQ_NEXT(mbuf, next);
-	if (nbuf != NULL) {
-		nmsg = msg_get(msg->owner, msg->request, conn->redis);
-		if (nmsg == NULL) {
-		        mbuf_put(nbuf);
-		        return DN_ENOMEM;
-		}
-		mbuf_insert(&nmsg->mhdr, nbuf);
-		nmsg->pos = nbuf->pos;
-
-		nmsg->mlen = mbuf_length(nbuf);
-		msg->mlen -= nmsg->mlen;
-
-		conn->recv_done(ctx, conn, msg, nmsg);
-		return DN_OK;
-	}
-   */
 
     /*
      * Input mbuf has un-parsed data. Split mbuf of the current message msg
@@ -810,7 +788,7 @@ msg_send_chain(struct context *ctx, struct conn *conn, struct msg *msg)
     size_t limit;                        /* bytes to send limit */
     ssize_t n;                           /* bytes sent by sendv */
 
-    if (TRACING_LEVEL == LOG_VVERB) {
+    if (get_tracking_level() >= LOG_VVERB) {
        loga("About to dump out the content of msg");
        msg_dump(msg);
     }
